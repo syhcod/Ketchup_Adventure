@@ -20,6 +20,7 @@ function _init()
 	kfx=false kfy=false
 	kx=0 ky=0
 	t=0
+
 end
 
 function leg_change()
