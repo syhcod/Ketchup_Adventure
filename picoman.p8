@@ -20,7 +20,7 @@ function _init()
 		mx=8,
 		mxn=20,
 		num=0,
-		r=20,
+		r=12,
 		av=0.03,
 		theta=0,
 		group={}
@@ -29,8 +29,6 @@ function _init()
 	for i=1,cola.mxn do
 			cola.group[i]=0
 	end
-
-	t=0
 
 end
 
@@ -75,7 +73,7 @@ function throw_cola()
 		end
 		cola.group[ij]={
 			x=x+5+cola.r*cos(cola.theta),
-			y=y+12+cola.r*sin(cola.theta),
+			y=y+12+cola.r*sin(cola.theta)/2,
 			vx=5*(1-2*fp),
 			vy=0,
 			dir=0
@@ -87,11 +85,20 @@ end
 
 function _update()
 	move=false
-	sec+=1
+	sec=(sec+1)%256
 	update_smoke()
 	cola.theta=cola.theta+cola.av
 	
-	if (sec==60) then sec=0 end
+	--music--
+	if (sec==1) then
+		sfx(0,0)
+		sfx(1,1)
+	end
+	if (sec==128) then
+		sfx(0,0)
+		sfx(2,2)
+	end
+	
 
 	if btn(🅾️) then
 	 if  cola.num<cola.mx and cola.zpush==1 then
@@ -169,18 +176,7 @@ end
 
 function _draw()
 	cls(3)
-	--music--
-	if (t==0) then
-		sfx(0,0)
-		sfx(1,1)
-	end
-	if (t==128) then
-		sfx(0,0)
-		sfx(2,2)
-	end
-	t=(t+1)%256
 	
-	spr(sp, x, y, 2, 2, f, false)
 	spr(leg, x, y+16, 2, 2, f, false)
 	spr(16,x+8-(hand*11)-smoke*hand*2+smoke,y-smoke)
 	if cola.num>0 then
@@ -191,7 +187,7 @@ function _draw()
 			spr(
 				32,
 				x+5+cola.r*cos(rot),
-				y+12+cola.r*sin(rot),
+				y+12+cola.r*sin(rot)/2,
 				1,
 				1
 			)
@@ -214,6 +210,7 @@ function _draw()
 		end
 	end	
 	
+	spr(sp, x, y, 2, 2, f, false)
 end
 
 __gfx__
