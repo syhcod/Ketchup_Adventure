@@ -13,11 +13,13 @@ function _init()
 	legcheck = false
 	smoke=0
 	fp=0
+	mx=100
+	my=100
 	
 	cola={
 		zpush=0,
 		xpush=0,
-		mx=8,
+		mx=20,
 		mxn=20,
 		num=0,
 		r=12,
@@ -27,7 +29,7 @@ function _init()
 	}
 	
 	for i=1,cola.mxn do
-			cola.group[i]=0
+			cola.group[i]={emp=true}
 	end
 
 end
@@ -67,19 +69,26 @@ function throw_cola()
 		ij=0
 		while ii do
 			ij=ij+1
-			if cola.group[ij]==0 then
+			if ij>cola.mxn then
 				ii=false
+			else
+				if cola.group[ij].emp==true then
+					ii=false
+				end
 			end
 		end
-		cola.group[ij]={
-			x=x+5+cola.r*cos(cola.theta),
-			y=y+12+cola.r*sin(cola.theta)/2,
-			vx=5*(1-2*fp),
-			vy=0,
-			dir=0
-		}
-		cola.num=cola.num-1
-		cola.theta=cola.theta+1/cola.mx
+		if (ij<=cola.mxn) then
+			cola.group[ij]={
+				xx=x+5+cola.r*cos(cola.theta),
+				yy=y+12+cola.r*sin(cola.theta)/2,
+				vx=5*(1-2*fp),
+				vy=0,
+				dir=0,
+				emp=false
+			}
+			cola.num=cola.num-1
+			cola.theta=cola.theta+1/cola.mx
+		end
 	end
 end
 
@@ -88,7 +97,24 @@ function _update()
 	sec=(sec+1)%256
 	update_smoke()
 	cola.theta=cola.theta+cola.av
-	
+	mv=1.2
+	if ((x-mx)^2+(y-my)^2)<10 then
+		mv=0
+	end
+	if (x-mx)^2>10 then
+		if x>mx  then
+			mx=mx+mv
+		else
+			mx=mx-mv
+		end
+	else
+		if y>my then
+			my=my+mv
+		else
+			my=my-mv
+		end
+	end
+
 	--music--
 	if (sec==1) then
 		sfx(0,0)
@@ -155,12 +181,13 @@ function _update()
 	else leg=33
 	end
 	for i=1,cola.mxn do
-		if not ( cola.group[i] ==0) then
-			cola.group[i].x=cola.group[i].x+cola.group[i].vx
-			cola.group[i].y=cola.group[i].y+cola.group[i].vy
+		if ( cola.group[i].emp ==false) then
+			cola.group[i].xx=cola.group[i].xx+cola.group[i].vx
+			cola.group[i].yy=cola.group[i].yy+cola.group[i].vy
 			cola.group[i].dir=(cola.group[i].dir+1)%4
-			if cola.group[i].x^2+cola.group[i].y^2>1000000 then
-				cola.group[i]=0
+		if (cola.group[i].xx<-10 or	cola.group[i].xx> 130)
+					or 	(cola.group[i].yy<-10 or	cola.group[i].yy> 130)  then
+					cola.group[i].emp=true	
 			end
 		end			  
 	end
@@ -194,14 +221,14 @@ function _draw()
 		end
 	end
 	for i=1,cola.mxn do
-		if not ( cola.group[i] ==0) then
+		if ( cola.group[i].emp ==false) then
 		
 			cd_short=cola.group[i].dir
 			
 			spr(
 				32,
-				cola.group[i].x,
-				cola.group[i].y,
+				cola.group[i].xx,
+				cola.group[i].yy,
 				1,
 				1,
 				bl(cd_short%2),
@@ -211,6 +238,7 @@ function _draw()
 	end	
 	
 	spr(sp, x, y, 2, 2, f, false)
+	spr(10,mx,my,2,3)
 end
 
 __gfx__
@@ -222,22 +250,22 @@ eee77eeeeeeeeef00668eeee0668eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 ee7ee7eeeeeeeeffffeeeeeeffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee448ee844eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeee077070eeeee070eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee84ee48eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeee01070700eeee0700eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee4444eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0110707000eee07000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee334433eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeee6eeeee0110000010eee00010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee34444443eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeee6e6eeee0101000010eee01010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee3343333433eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeee6eeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee333333333333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee337733337733eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee33377333377333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee33370333307333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee33370333307333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0000000000eeeeee0000000000eeeeee0000000000eeeeeeeeeeeeeeeeeeeeeeeeeee3333333333333333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeee77eeeee01110110eeeeeeee01110110eeeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeee3333330330333333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeee7ee7eeee01110110eeeeeeee01110110eeeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeee33333333333333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee7acc7eeee01110110eeeeeeee011100110eeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeee3388877888333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7abb7eeeee01110110eeeeeeee011100110eeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeee333888888333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7887eeeeee01110110eeeeeeee0110ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee3338888333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-e7e77eeeeeee01110110eeeeeee01110ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee33333333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7eeeeeeeee01110110eeeeeee01100ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee333333eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0110711010eee07000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee994499eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeee6eeeee0110007000eee00010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee94444449eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeee6e6eeee0101000010eee01010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee9949999499eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeee6eeeee0101100010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee997799997799eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99977999977999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99970999907999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99970999907999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0000000000eeeeee0000000000eeeeee0000000000eeeeeeeeeeeeeeeeeeeeeeeeeee9999999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeee77eeeee01110110eeeeeeee01110110eeeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeee9999990990999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeee7ee7eeee01110110eeeeeeee01110110eeeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeee99999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee7acc7eeee01110110eeeeeeee011100110eeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeee9988877888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7abb7eeeee01110110eeeeeeee011100110eeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeee999888888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7887eeeeee01110110eeeeeeee0110ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee9998888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+e7e77eeeeeee01110110eeeeeee01110ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7eeeeeeeee01110110eeeeeee01100ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeee01110110eeeeee01110eee01110eeeee0111010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeee77eeeee01110110eeeee01100eeee01110eeeee011100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeee7ee7eeee01110110eeeee0110eeeee00110eeeee01110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
