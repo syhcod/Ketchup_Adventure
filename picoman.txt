@@ -16,6 +16,11 @@ function _init()
 	mx=100
 	my=100
 	
+	wheel=39
+	rob=23
+	robf=false
+	lser=false
+	
 	cola={
 		zpush=0,
 		xpush=0,
@@ -28,8 +33,17 @@ function _init()
 		group={}
 	}
 	
+	laser={
+		mxn=20,
+		num=2,
+		group={}
+	}
+	
 	for i=1,cola.mxn do
 			cola.group[i]={emp=true}
+	end
+	for i=1,laser.mxn do
+			laser.group[i]={emp=true}
 	end
 
 end
@@ -57,6 +71,8 @@ end
 function update_smoke()
 	if (sec%interval==0) then
 		smoke+=1
+		if wheel==39 then wheel=55
+		else wheel=39 end
 		if (smoke==3) then
 			smoke=0
 		end
@@ -92,23 +108,62 @@ function throw_cola()
 	end
 end
 
+function throw_laser()
+	if (laser.num>0) then
+		ii=true
+		ij=0
+		while ii do
+			ij=ij+1
+			if ij>laser.mxn then
+				ii=false
+			else
+				if laser.group[ij].emp==true then
+					ii=false
+				end
+			end
+		end
+		if robf then rang=1
+		else rang=0 end
+		if (ij<=laser.mxn) then
+			laser.group[ij]={
+				xx=mx,
+				yy=my,
+				vx=5*(1-2*rang),
+				vy=0,
+				dir=0,
+				emp=false
+			}
+			laser.num=laser.num-1
+		end
+	end
+end
+
 function _update()
 	move=false
 	sec=(sec+1)%256
 	update_smoke()
 	cola.theta=cola.theta+cola.av
-	mv=1.2
-	if ((x-mx)^2+(y-my)^2)<10 then
-		mv=0
-	end
-	if (x-mx)^2>10 then
-		if x>mx  then
+	mv=0.6
+	if (y-my)^2<10 then 
+		rob=57
+		if not lser then
+			throw_laser()
+			lser=true
+		end
+		if (x-mx)^2+(y-my)^2<10 then
+			mv=0
+		end
+		if x>mx then
 			mx=mx+mv
+			robf=false
 		else
 			mx=mx-mv
+			robf=true
 		end
-	else
-		if y>my then
+	else rob=23 end
+	
+	if (y-my)^2>10 then
+		if y>my  then
 			my=my+mv
 		else
 			my=my-mv
@@ -125,7 +180,7 @@ function _update()
 		sfx(2,2)
 	end
 	
-
+--button press--
 	if btn(🅾️) then
 	 if  cola.num<cola.mx and cola.zpush==1 then
 			cola.num=cola.num+1
@@ -159,6 +214,12 @@ function _update()
 		end
 	end
 	if (btn(➡️)) then 
+		if move==true then
+			if (btn(⬅️)) then
+				leg_change()
+				return
+			end
+		end
 		move=true
 		if (btn(⬅️)) then
 			move=false
@@ -181,13 +242,28 @@ function _update()
 	else leg=33
 	end
 	for i=1,cola.mxn do
-		if ( cola.group[i].emp ==false) then
-			cola.group[i].xx=cola.group[i].xx+cola.group[i].vx
-			cola.group[i].yy=cola.group[i].yy+cola.group[i].vy
-			cola.group[i].dir=(cola.group[i].dir+1)%4
-		if (cola.group[i].xx<-10 or	cola.group[i].xx> 130)
-					or 	(cola.group[i].yy<-10 or	cola.group[i].yy> 130)  then
-					cola.group[i].emp=true	
+		ci=cola.group[i]
+		if ( ci.emp ==false) then
+			ci.xx=ci.xx+ci.vx
+			ci.yy=ci.yy+ci.vy
+			ci.dir=(ci.dir+1)%4
+		if (ci.xx<-10 or	ci.xx> 130)
+					or 	(ci.yy<-10 or	ci.yy> 130)  then
+					ci.emp=true	
+			end
+		end			  
+	end
+	for i=1,laser.mxn do
+		ci=laser.group[i]
+		if ( ci.emp ==false) then
+			ci.xx=ci.xx+ci.vx
+			ci.yy=ci.yy+ci.vy
+			ci.dir=(ci.dir+1)%4
+		if (ci.xx<-10 or	ci.xx> 130)
+					or 	(ci.yy<-10 or	ci.yy> 130)  then
+					ci.emp=true
+					lser=false
+					laser.num+=1
 			end
 		end			  
 	end
@@ -203,6 +279,8 @@ end
 
 function _draw()
 	cls(3)
+	
+	map(0,0)
 	
 	spr(leg, x, y+16, 2, 2, f, false)
 	spr(16,x+8-(hand*11)-smoke*hand*2+smoke,y-smoke)
@@ -236,44 +314,60 @@ function _draw()
 				)
 		end
 	end	
-	
+	for i=1,laser.mxn do
+		if ( laser.group[i].emp ==false) then
+		
+			ld_short=laser.group[i].dir
+			
+			spr(
+				9,
+				laser.group[i].xx,
+				laser.group[i].yy,
+				1,
+				1,
+				bl(ld_short%2),
+				bl((ld_short-ld_short%2)/2)
+				)
+		end
+	end	
 	spr(sp, x, y, 2, 2, f, false)
-	spr(10,mx,my,2,3)
+	spr(wheel,mx,my+8,2,1,robf,false)
+	spr(rob,mx,my,2,1,robf,false)
 end
 
 __gfx__
-eeeeeeeeeeeeee0000eeeeee00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeee00fffeeeeeeffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee8eeee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7ee7eeeeee00f0f0eeeeeef0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee44eeee44eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee77eeeeeeeeeffffeeeeeeffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee44ee44eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee77eeeeeeeeef00668eeee0668eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee484eeee484eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7ee7eeeeeeeeffffeeeeeeffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee448ee844eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeee077070eeeee070eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee84ee48eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeee01070700eeee0700eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee4444eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0110711010eee07000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee994499eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeee6eeeee0110007000eee00010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee94444449eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeee6e6eeee0101000010eee01010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee9949999499eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeee6eeeee0101100010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee997799997799eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99977999977999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99970999907999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0101111010eee11010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99970999907999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeee0000000000eeeeee0000000000eeeeee0000000000eeeeeeeeeeeeeeeeeeeeeeeeeee9999999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeee77eeeee01110110eeeeeeee01110110eeeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeee9999990990999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeee7ee7eeee01110110eeeeeeee01110110eeeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeee99999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee7acc7eeee01110110eeeeeeee011100110eeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeee9988877888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7abb7eeeee01110110eeeeeeee011100110eeeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeee999888888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7887eeeeee01110110eeeeeeee0110ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee9998888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-e7e77eeeeeee01110110eeeeeee01110ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee99999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7eeeeeeeee01110110eeeeeee01100ee0110eeeeee01110110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeee01110110eeeeee01110eee01110eeeee0111010eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeee77eeeee01110110eeeee01100eeee01110eeeee011100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeee7ee7eeee01110110eeeee0110eeeee00110eeeee01110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee78887eeee01110110eeeee0110eeeeee0110eeee001110eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee78887eeeee01000000eeee0440eeeeeee0110eee0401000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7887eeeeee004400400eee04400eeeeee0440eee04004400eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-e7e77eeeeeee0444440440eee0440eeeeee0440eee040444440eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-ee7eeeeeeeee0000000000eee0000eeeeeee0440eee00000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeee0000eeeeeeeeeeeeeeeeeeeeeee0666606eeeeee666606eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeee00fffeeeeeeeeeeeee000000000066660660000066660660000eeeeeeeeeeee77eeeeeee8eeee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7ee7eeeeee00f0f0eeeeeeeeeeee04444444406c7cc66644406c7cc6660440eeeeeeeeee77997eeeee44eeee44eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee77eeeeeeeeeffffeeeeeeeeeee0444444404067ccc666444067ccc6660040eeeeeeee77998897eeeee44ee44eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee77eeeeeeeeef00668eeeeeeee0444444404406cccc66644406cccc6660440eeeeeeee77aa9997eee484eeee484eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7ee7eeeeeeeeffffeeeeeeeee04444444044406cccc66444406cccc6604440eeeeeeeeee77aa7eeeee448ee844eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeee077070eeeeeee04444444044440666666444444666666044440eeeeeeeeeeee77eeeeeee84ee48eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeee01070700eeeeee00000000044440000000000000000000044440eeeeeeeeeeeeeeeeeeeeee4444eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0110711010eeeee044440ee044440eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee994499eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeee6eeeee0110007000eeeee044440ee04440e00000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee94444449eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeee6e6eeee0101000010eeeee044440ee0440ee44444444eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee9949999499eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeee6eeeee0101100010eeeee044440ee040eee44444444eeeeeeeeeeee000000000eeeeeeeeeeeee999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eeeee044440ee00eeee44444444eeeeeeeeeee0000000000eeeeeeeeeeeee997799997799eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eeeee044440ee0eeeee44444444eeeeeeeeee00000000000eeeeeeeeeeee99977999977999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eeeee044440eeeeeeee44444444eeeeeeeeee06666666000eeeeeeeeeeee99970999907999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0101111010eeeee044440eeeeeeee00000000eeeeeeeeee06888886000eeeeeeeeeeee99970999907999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeee0000000000eeeeee0000000000eeeeee0000000000eeeee06866686000eeeeeeeeeee9999999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeee77eeeee01110110eeeeeeee01110110eeeeeeee01110110eeeeee06868686000eeeeeeeeeee9999990990999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeee7ee7eeee01110110eeeeeeee01110110eeeeeeee01110110eeeeee068666860006eeeeeeeeeee99999999999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee7acc7eeee01110110eeeeeeee011100110eeeeeee01110110eeeeee068888860000eeeeeeeeeeee9988877888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7abb7eeeee01110110eeeeeeee011100110eeeeeee01110110eeeee606666666000eeeeeeeeeeeee999888888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7887eeeeee01110110eeeeeeee0110ee0110eeeeee01110110eeee660000000000eeeeeeeeeeeeeee9998888999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+e7e77eeeeeee01110110eeeeeee01110ee0110eeeeee01110110eeee60660660660eeeeeeeeeeeeeeeee99999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7eeeeeeeee01110110eeeeeee01100ee0110eeeeee01110110eeeee660660660eeeeeeeeeeeeeeeeeee999999eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeee01110110eeeeee01110eee01110eeeee0111010eeeeeee06866686000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeee77eeeee01110110eeeee01100eeee01110eeeee011100eeeeeeee06868686000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeee7ee7eeee01110110eeeee0110eeeee00110eeeee01110eeeeeeeee068666860006eeeeee666668eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee78887eeee01110110eeeee0110eeeeee0110eeee001110eeeeeeeee068888860006eeeeee66e6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee78887eeeee01000000eeee0440eeeeeee0110eee0401000eeeeeeee006666666006eeeeeee60e6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7887eeeeee004400400eee04400eeeeee0440eee04004400eeeeee060000000006eeeeeeeee0e0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+e7e77eeeeeee0444440440eee0440eeeeee0440eee040444440eeeee66066066066eeeeee0000000006660eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ee7eeeeeeeee0000000000eee0000eeeeeee0440eee00000000eeeeee066066066eeeeeeee06888866060eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
@@ -373,6 +467,16 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 __gff__
 0000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__map__
+08080808080808080a0b0a0b0c0d080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08080808080808081a1b1a1b1c1d080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08030505050506072a2b2a2b2c2d080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08130a0b0a0b0c130a0b0a0b0c0d080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08141a1b1a1b1c141a1b1a1b1c1d080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08082a2b2a2b2c2d2a2b2a2b2c2d080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08080808080808080808083b3c3d080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0808080808080808080808080808080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0808080808080808080808080808080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
 001000000b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b0500b050
 00100000140501405010050100501405014050100501005014050140501005010050140501405010050100501c0501c05018050180501c0501c05018050180502105021050180501805021050210501805018050
